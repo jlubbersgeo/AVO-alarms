@@ -7,15 +7,19 @@ import shapely.geometry as sgeom
 
 
 def make_map(latitude, longitude, main_dist=50, center_longitude=180):
-    """Make the base maps for all AVO-alarms that require maps
+    """
+    Make the base maps for all AVO-alarms that require maps
 
     Args:
-        latitude (_type_): _description_
-        longitude (_type_): _description_
-        main_dist (int, optional): _description_. Defaults to 50.
-        inset_dist (int, optional): _description_. Defaults to 500.
-        scale (int, optional): _description_. Defaults to 15.
-        center_longitude (int, optional): _description_. Defaults to 180.
+        latitude (float): latitude of volcano in decimal degrees
+
+        longitude (float): longitude of volcano in decimal degrees
+
+        main_dist (int, optional): WECH WHAT IS THIS...some way of establishing bounding box?.
+        Defaults to 50.
+
+        center_longitude (int, optional): center longitude of cartopy.ccrs.Mercator().Because
+        we are near the anti-meridian this works better than API default. Defaults to 180.
     """
     dlat = 1 * (main_dist / 111.1)
     dlon = dlat / np.cos(latitude * np.pi / 180)
@@ -93,9 +97,17 @@ def make_map(latitude, longitude, main_dist=50, center_longitude=180):
         },
     )
     # grid lines
+    lon_line_locs = [longitude - (dlon / 2), longitude + (dlon / 2)]
+    new_lon_locs = []
+    for loc in lon_line_locs:
+        if loc < -180:
+            new_lon_locs.append(loc + 360)
+        else:
+            new_lon_locs.append(loc)
+
     gl.ylocator = mticker.FixedLocator([latitude - (dlat / 2), latitude + (dlat / 2)])
     # these aren't working with stuff that straddles the anti-meridian
-    gl.xlocator = mticker.FixedLocator([longitude - (dlon / 2), longitude + (dlon / 2)])
+    gl.xlocator = mticker.FixedLocator(new_lon_locs)
     gl.xlabel_style = {"fontsize": 6}
     gl.ylabel_style = {"fontsize": 6}
     gl.top_labels = False
@@ -116,17 +128,29 @@ def make_map(latitude, longitude, main_dist=50, center_longitude=180):
     return ax, inset_ax
 
 
-# Shishaldin
-latitude = 54.7554
+############################ TESTING THE ABOVE FUNCTION #########################################
+# THIS TEST CHOOSES ONE VOLCANO COMPLETELY IN THE WESTERN HEMISPHERE, ONE COMPLETELY IN THE EAST,
+# AND ONE THAT IS VERY CLOSE TO THE DATE LINE
 
-longitude = -163.9711
+# the major cost to performance is downloading the data for the small inset
+# can we somehow cache this?
+# https://discourse.holoviz.org/t/using-geoviews-tile-sources-offline/4859/5
 
+# test locations
+test_dict = {
+    "name": ["Shishaldin", "Semisopochnoi", "Buldir"],
+    "latitude": np.array([54.7554, 51.9288, 52.3488]),
+    "longitude": np.array([-163.9711, 179.5977, 175.909]),
+}
 
-fig = plt.figure(figsize=(4, 4))
-make_map(latitude, longitude)
-plt.savefig(
-    r"C:\Users\jlubbers\OneDrive - DOI\Desktop\test_figures\AVO-alarms_maptest.png",
-    bbox_inches="tight",
-    dpi=250,
-)
-# plt.show()
+for i in range(len(test_dict)):
+    print(f"working on {test_dict['name'][i]}")
+    fig = plt.figure(figsize=(4, 4))
+    make_map(test_dict["latitude"][i], test_dict["longitude"][i])
+    plt.savefig(
+        r"C:\Users\jlubbers\OneDrive - DOI\Desktop\test_figures\AVO-alarms_maptest_{}.png".format(
+            test_dict["name"][i]
+        ),
+        bbox_inches="tight",
+        dpi=250,
+    )
