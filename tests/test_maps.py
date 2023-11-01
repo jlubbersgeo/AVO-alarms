@@ -4,9 +4,6 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import numpy as np
 import shapely.geometry as sgeom
-from cartopy.mpl.gridliner import Gridliner
-from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 
 def make_map(latitude, longitude, main_dist=50, center_longitude=180):
