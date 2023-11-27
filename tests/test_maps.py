@@ -4,9 +4,28 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import numpy as np
 import shapely.geometry as sgeom
+from matplotlib.path import Path
+from matplotlib_scalebar.scalebar import ScaleBar
 
 
-def make_map(latitude, longitude, main_dist=50, center_longitude=180):
+def add_watermark(text, ax=None):
+    if ax is None:
+        ax = plt.gca()
+
+    ax.text(
+        0.5,
+        0.5,
+        text,
+        transform=ax.transAxes,
+        fontsize=50,
+        color="gray",
+        alpha=0.5,
+        va="center",
+        ha="center",
+    )
+
+
+def make_map(latitude, longitude, main_dist=50, center_longitude=180, test=False):
     """
     Make the base maps for all AVO-alarms that require maps
 
@@ -60,7 +79,7 @@ def make_map(latitude, longitude, main_dist=50, center_longitude=180):
     # Create an inset GeoAxes
     inset_ax = fig.add_axes(
         [0.75, 0.75, 0.2, 0.2],
-        projection=ccrs.Mercator(central_longitude=center_longitude),
+        projection=ccrs.AlbersEqualArea(central_longitude=center_longitude),
     )
 
     ax.set_extent(extent, crs=ccrs.PlateCarree())
@@ -125,6 +144,47 @@ def make_map(latitude, longitude, main_dist=50, center_longitude=180):
         linewidth=0.35,
     )
 
+    if test is True:
+        add_watermark("TEST\nIMAGE", ax=ax)
+
+    # making non-rectangular bounding box on inset
+    # e.g., trim along lines of longitude
+    lower_space = 0
+    rect = Path(
+        [
+            [inset_extent[0], inset_extent[2]],
+            [inset_extent[1], inset_extent[2]],
+            [inset_extent[1], inset_extent[3]],
+            [inset_extent[0], inset_extent[3]],
+            [inset_extent[0], inset_extent[2]],
+        ]
+    ).interpolated(20)
+    proj_to_data = ccrs.PlateCarree()._as_mpl_transform(inset_ax) - inset_ax.transData
+    rect_in_target = proj_to_data.transform_path(rect)
+
+    inset_ax.set_boundary(rect_in_target)
+    inset_ax.set_extent(
+        [
+            inset_extent[0],
+            inset_extent[1],
+            inset_extent[2] - lower_space,
+            inset_extent[3],
+        ]
+    )
+
+    # scale bar
+    # https://github.com/ppinard/matplotlib-scalebar
+    # need to check to see if this is the right dx
+    ax.add_artist(
+        ScaleBar(
+            dx=1,
+            location="lower left",
+            box_color="none",
+            scale_loc="right",
+            font_properties={"size": 6},
+        )
+    )
+
     return ax, inset_ax
 
 
@@ -146,7 +206,7 @@ test_dict = {
 for i in range(len(test_dict)):
     print(f"working on {test_dict['name'][i]}")
     fig = plt.figure(figsize=(4, 4))
-    make_map(test_dict["latitude"][i], test_dict["longitude"][i])
+    make_map(test_dict["latitude"][i], test_dict["longitude"][i], test=True)
     plt.savefig(
         r"C:\Users\jlubbers\OneDrive - DOI\Desktop\test_figures\AVO-alarms_maptest_{}.png".format(
             test_dict["name"][i]
