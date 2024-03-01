@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import matplotlib.pyplot as plt
@@ -9,6 +11,13 @@ from matplotlib_scalebar.scalebar import ScaleBar
 
 
 def add_watermark(text, ax=None):
+    """Add a watermark to a figure
+
+    Args:
+        text (str): the text to add as a watermark
+        ax (matplotlib Axes object, optional): the matplotlib axis to add the watermark to.
+        Defaults to None. if `None` then `plt.gca` is used.
+    """
     if ax is None:
         ax = plt.gca()
 
@@ -184,7 +193,9 @@ def make_map(latitude, longitude, main_dist=50, center_longitude=180, test=False
             font_properties={"size": 6},
         )
     )
-
+    date_and_time = datetime.now()
+    datetime_string = date_and_time.strftime("%d/%m/%Y %H:%M:%S")
+    ax.set_title(datetime_string, loc="left")
     return ax, inset_ax
 
 
@@ -202,15 +213,16 @@ test_dict = {
     "latitude": np.array([54.7554, 51.9288, 52.3488]),
     "longitude": np.array([-163.9711, 179.5977, 175.909]),
 }
+export_path = r"C:\Users\jlubbers\Desktop\test_figures"
 
 for i in range(len(test_dict)):
     print(f"working on {test_dict['name'][i]}")
     fig = plt.figure(figsize=(4, 4))
     make_map(test_dict["latitude"][i], test_dict["longitude"][i], test=True)
+    save_path = f"{export_path}\AVO-alarms_maptest_{test_dict['name'][i]}.png"
+    print(save_path)
     plt.savefig(
-        r"C:\Users\jlubbers\OneDrive - DOI\Desktop\test_figures\AVO-alarms_maptest_{}.png".format(
-            test_dict["name"][i]
-        ),
+        save_path,
         bbox_inches="tight",
         dpi=250,
     )

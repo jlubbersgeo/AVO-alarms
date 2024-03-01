@@ -1,0 +1,27 @@
+name: avo_alarms
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pipreqs
+  - ca-certificates
+  - openssl
+  - beautifulsoup4
+  - cartopy
+  - matplotlib
+  - numpy
+  - obspy
+  - pandas
+  - pillow
+  - pycurl
+  - pyshp
+  - python-dotenv
+  - requests
+  - scikit-learn
+  - shapely
+  - urllib3
+  - utm
+  - certifi
+  - matplotlib-scalebar
+prefix: C:\Users\jlubbers\AppData\Local\mambaforge\envs\avo_alarms
